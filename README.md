@@ -83,6 +83,7 @@ services:
     restart: always # Required for server restart functionality
     ports:
       - "3000:3000"
+    user: "1000:1000"
     volumes:
       - norish_data:/app/uploads
     environment:
