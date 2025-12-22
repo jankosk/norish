@@ -51,17 +51,17 @@ RUN pnpm install --prod --offline --frozen-lockfile --recursive
 # Install production deps, then remove wrong-platform binaries
 RUN set -eux; cd node_modules/.pnpm; \
     find . -maxdepth 1 -type d -name "@next+swc-*" \
-      ! -name "*linux-x64-musl*" \
-      ! -name "*linux-arm64-musl*" \
-      -exec rm -rf {} +; \
+    ! -name "*linux-x64-musl*" \
+    ! -name "*linux-arm64-musl*" \
+    -exec rm -rf {} +; \
     find . -maxdepth 1 -type d -name "@img+sharp-*" \
-      ! -name "*linuxmusl-x64*" \
-      ! -name "*linuxmusl-arm64*" \
-      -exec rm -rf {} +; \
+    ! -name "*linuxmusl-x64*" \
+    ! -name "*linuxmusl-arm64*" \
+    -exec rm -rf {} +; \
     find . -maxdepth 1 -type d -name "@img+sharp-libvips-*" \
-      ! -name "*linuxmusl-x64*" \
-      ! -name "*linuxmusl-arm64*" \
-      -exec rm -rf {} +;
+    ! -name "*linuxmusl-x64*" \
+    ! -name "*linuxmusl-arm64*" \
+    -exec rm -rf {} +;
 
 ##############################
 # Build stage
@@ -107,11 +107,11 @@ ENV NODE_ENV=production \
     HOST="0.0.0.0"
 
 # Create non-root user with configurable UID/GID (always ensure norish exists)
-ARG UID=1000
-ARG GID=1000
+ARG UID=1001
+ARG GID=1001
 
-RUN addgroup -g ${GID} -S norishapp || true && \
-    adduser  -u ${UID} -S norish -G norishapp || true
+RUN addgroup -g ${GID} -S norishapp && \
+    adduser -u ${UID} -S norish -G norishapp
 
 # Copy Next.js standalone output (includes minimal node_modules for Next.js itself)
 COPY --from=build --chown=${UID}:${GID} /app/.next/standalone ./
@@ -136,9 +136,9 @@ RUN mkdir -p /app/uploads/recipes /app/uploads/avatars /app/uploads/video-temp /
 # Download yt-dlp standalone binary during build (architecture-specific for Alpine/musl)
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
-      YT_DLP_BINARY="yt-dlp_musllinux_aarch64"; \
+    YT_DLP_BINARY="yt-dlp_musllinux_aarch64"; \
     else \
-      YT_DLP_BINARY="yt-dlp_musllinux"; \
+    YT_DLP_BINARY="yt-dlp_musllinux"; \
     fi && \
     wget -q "https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}/${YT_DLP_BINARY}" -O /app/bin/yt-dlp && \
     chmod +x /app/bin/yt-dlp
@@ -150,7 +150,7 @@ EXPOSE 3000
 VOLUME ["/app/uploads"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode===200?0:1))" || exit 1
+    CMD node -e "require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode===200?0:1))" || exit 1
 
 # Run directly with node
 CMD ["node", "dist-server/server.cjs"]
