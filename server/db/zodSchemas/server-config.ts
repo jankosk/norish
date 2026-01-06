@@ -18,6 +18,7 @@ export const ServerConfigKeys = {
   SCHEDULER_CLEANUP_MONTHS: "scheduler_cleanup_months",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
   PROMPTS: "prompts",
+  LOCALE_CONFIG: "locale_config",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -115,6 +116,24 @@ export const PromptsConfigInputSchema = PromptsConfigSchema.omit({ isOverridden:
 export type PromptsConfigInput = z.infer<typeof PromptsConfigInputSchema>;
 
 // ============================================================================
+// i18n Locale Configuration Schema
+// ============================================================================
+
+export const I18nLocaleEntrySchema = z.object({
+  name: z.string(),
+  enabled: z.boolean(),
+});
+
+export type I18nLocaleEntry = z.infer<typeof I18nLocaleEntrySchema>;
+
+export const I18nLocaleConfigSchema = z.object({
+  defaultLocale: z.string(),
+  locales: z.record(z.string(), I18nLocaleEntrySchema),
+});
+
+export type I18nLocaleConfig = z.infer<typeof I18nLocaleConfigSchema>;
+
+// ============================================================================
 // Units Schema
 // ============================================================================
 
@@ -166,6 +185,12 @@ export const AIProviderSchema = z.enum([
   "lm-studio",
   "generic-openai",
   "perplexity",
+  "azure",
+  "mistral",
+  "anthropic",
+  "deepseek",
+  "google",
+  "groq",
 ]);
 
 export type AIProvider = z.infer<typeof AIProviderSchema>;
@@ -318,6 +343,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return RecipePermissionPolicySchema;
     case ServerConfigKeys.PROMPTS:
       return PromptsConfigSchema;
+    case ServerConfigKeys.LOCALE_CONFIG:
+      return I18nLocaleConfigSchema;
     default:
       return z.any();
   }

@@ -222,6 +222,19 @@
     }
   },
   "admin": {
+    "general": {
+      "title": "General",
+      "allowRegistration": "Allow new user registration",
+      "registrationDescription": "When disabled, only existing users can sign in",
+      "locales": "Enabled Languages",
+      "localesDescription": "Select which languages users can choose from",
+      "defaultLocale": "Default Language",
+      "defaultLocaleDescription": "Language used for new users and as fallback",
+      "saveLocales": "Save Language Settings",
+      "localesSaved": "Language settings saved",
+      "localesError": "Failed to save language settings",
+      "atLeastOneLocale": "At least one language must be enabled"
+    },
     "registration": {
       "title": "Registration",
       "allowRegistration": "Allow new user registration",
@@ -375,12 +388,20 @@
       "provider": "AI Provider",
       "providers": {
         "openai": "OpenAI",
+        "azure": "Azure OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google AI",
+        "mistral": "Mistral AI",
+        "deepseek": "DeepSeek",
         "perplexity": "Perplexity",
+        "groq": "Groq",
         "ollama": "Ollama (Local)",
         "lmStudio": "LM Studio (Local)",
         "genericOpenai": "Generic OpenAI-compatible"
       },
       "endpointUrl": "Endpoint URL",
+      "azureEndpoint": "Azure Resource URL (Optional)",
+      "azureEndpointDescription": "Custom Azure OpenAI endpoint. Leave empty for default.",
       "model": "Model",
       "visionModel": "Vision Model (Optional)",
       "visionModelDescription": "Optional: Use a different model for image/vision tasks. Leave empty to use the model above.",

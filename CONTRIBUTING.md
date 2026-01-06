@@ -64,6 +64,7 @@ pnpm dev
 | `pnpm lint:fix`      | Fix linting errors automatically         |
 | `pnpm format`        | Format code with Prettier                |
 | `pnpm format:check`  | Check formatting without changes         |
+| `pnpm i18n:check`    | Check for missing locale keys            |
 | `pnpm db:push`       | Push schema changes to database          |
 
 ## Project Structure
@@ -169,6 +170,7 @@ git checkout -b fix/your-bug-fix
 ```bash
 pnpm lint
 pnpm test:run
+pnpm i18n:check
 pnpm build
 ```
 
@@ -195,23 +197,27 @@ pnpm test
 
 ## Adding Translations
 
-### 1. Update Locale Configuration
+Norish uses a configurable locale system. Locales are defined in code but can be enabled/disabled at runtime via the Admin UI or environment variables.
 
-Edit `i18n/config.ts` to add new locales:
+### 1. Add Locale to ALL_LOCALES
+
+Edit `i18n/config.ts` to add the new locale code:
 
 ```typescript
-export const locales = ["en", "nl", "your-locale"] as const;
+export const ALL_LOCALES = ["en", "nl", "de-formal", "de-informal", "your-locale"] as const;
 
-export const localeNames: Record<Locale, string> = {
+export const ALL_LOCALE_NAMES: Record<Locale, string> = {
   en: "English",
   nl: "Nederlands",
+  "de-formal": "Deutsch (Sie)",
+  "de-informal": "Deutsch (Du)",
   "your-locale": "Your Language",
 };
 ```
 
 ### 2. Create Translation Files
 
-Create a new folder in `i18n/messages/{your-locale}/` with the following files:
+Create a new folder `i18n/messages/{your-locale}/` with the following files:
 
 - `common.json` - Common UI strings
 - `recipes.json` - Recipe-related strings
@@ -222,6 +228,47 @@ Create a new folder in `i18n/messages/{your-locale}/` with the following files:
 - `auth.json` - Authentication strings
 
 Copy the structure from `i18n/messages/en/` as a starting point.
+
+### 3. Verify Translations
+
+Run the locale check to ensure all keys are present:
+
+```bash
+pnpm i18n:check
+```
+
+This command uses `en` as the source of truth and reports:
+
+- **Missing keys**: Keys that exist in `en` but not in your locale (CI will fail)
+- **Extra keys**: Keys in your locale that don't exist in `en` (warning only)
+
+The check runs automatically in CI and will block PRs with missing translations.
+
+### 4. Add Locale to Default Config
+
+Add the locale entry to `DEFAULT_LOCALE_CONFIG` in `config/server-config-loader.ts`:
+
+```typescript
+export const DEFAULT_LOCALE_CONFIG: I18nLocaleConfig = {
+  defaultLocale: "en",
+  locales: {
+    en: { name: "English", enabled: true },
+    nl: { name: "Nederlands", enabled: true },
+    "de-formal": { name: "Deutsch (Sie)", enabled: true },
+    "de-informal": { name: "Deutsch (Du)", enabled: true },
+    "your-locale": { name: "Your Language", enabled: true },
+  },
+};
+```
+
+This is the single source of truth - `seed-config.ts` imports from here automatically.
+
+### 5. Enable the Locale
+
+New locales are **disabled by default** until enabled via one of these methods:
+
+- **Admin UI**: Go to **Settings => Admin => General** and check the locale checkbox
+- **Environment variable**: Set `ENABLED_LOCALES=en,nl,your-locale` (comma-separated list)
 
 ## License
 
