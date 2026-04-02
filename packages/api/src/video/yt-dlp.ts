@@ -110,6 +110,7 @@ export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
 // In development, download to the configured runtime bin directory on first use
 const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
 const outputDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "video-temp");
+const proxyArgs = SERVER_CONFIG.YT_DLP_PROXY ? ["--proxy", SERVER_CONFIG.YT_DLP_PROXY] : [];
 
 export async function ensureYtDlpBinary(): Promise<void> {
   log.debug({ ytDlpPath }, "Checking for binary");
@@ -236,10 +237,9 @@ export async function getVideoMetadata(
 
   const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
+
   try {
-    const rawInfo = auth
-      ? await ytDlpWrap.getVideoInfo([url, ...auth.args])
-      : await ytDlpWrap.getVideoInfo(url);
+    const rawInfo = await ytDlpWrap.getVideoInfo([url, ...(auth?.args ?? []), ...proxyArgs]);
 
     // yt-dlp returns an array for Instagram carousel/image posts (one entry per image)
     // For single videos, it returns an object directly
@@ -291,6 +291,7 @@ export async function downloadVideoAudio(
 
   const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
+
   try {
     // Download video and extract audio as WAV format
     const ffmpegBinary = getFfmpegPath();
@@ -310,6 +311,7 @@ export async function downloadVideoAudio(
       "--extractor-args",
       "youtube:player_client=default", // Suppress JS runtime warning
       ...(auth?.args ?? []),
+      ...proxyArgs,
     ];
 
     // Add ffmpeg location if available
@@ -404,6 +406,7 @@ export async function downloadCaptions(
 
   const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
+
   const resolvedSubLang = subLang ?? "en";
 
   log.debug({ subLang, resolvedSubLang, url }, "Using language for subtitle download");
@@ -422,6 +425,7 @@ export async function downloadCaptions(
       "--extractor-args",
       "youtube:player_client=default",
       ...(auth?.args ?? []),
+      ...proxyArgs,
     ];
 
     await ytDlpWrap.execPromise(args);
@@ -538,6 +542,7 @@ export async function downloadVideo(
 
   const auth = tokens?.length ? await buildAuthArgs(tokens, url) : null;
 
+
   try {
     const ffmpegBinary = getFfmpegPath();
     const ffmpegDir = ffmpegBinary ? path.dirname(ffmpegBinary) : undefined;
@@ -554,6 +559,7 @@ export async function downloadVideo(
       "--extractor-args",
       "youtube:player_client=default",
       ...(auth?.args ?? []),
+      ...proxyArgs,
     ];
 
     // Add ffmpeg location if available
