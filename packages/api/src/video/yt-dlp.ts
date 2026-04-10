@@ -110,7 +110,13 @@ export const DOWNLOAD_VIDEO_FORMAT_SELECTOR =
 // In development, download to the configured runtime bin directory on first use
 const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
 const outputDir = path.join(SERVER_CONFIG.UPLOADS_DIR, "video-temp");
-const proxyArgs = SERVER_CONFIG.YT_DLP_PROXY ? ["--proxy", SERVER_CONFIG.YT_DLP_PROXY] : [];
+
+async function getProxyArgs(): Promise<string[]> {
+  const videoConfig = await getVideoConfig();
+  const proxy = videoConfig?.ytDlpProxy || SERVER_CONFIG.YT_DLP_PROXY;
+
+  return proxy ? ["--proxy", proxy] : [];
+}
 
 export async function ensureYtDlpBinary(): Promise<void> {
   log.debug({ ytDlpPath }, "Checking for binary");
@@ -239,6 +245,7 @@ export async function getVideoMetadata(
 
 
   try {
+    const proxyArgs = await getProxyArgs();
     const rawInfo = await ytDlpWrap.getVideoInfo([url, ...(auth?.args ?? []), ...proxyArgs]);
 
     // yt-dlp returns an array for Instagram carousel/image posts (one entry per image)
@@ -298,6 +305,7 @@ export async function downloadVideoAudio(
     const ffmpegDir = ffmpegBinary ? path.dirname(ffmpegBinary) : undefined;
 
     log.debug({ ffmpegDir, ffmpegBinary }, "Using ffmpeg for audio extraction");
+    const proxyArgs = await getProxyArgs();
 
     const args = [
       url,
@@ -425,7 +433,7 @@ export async function downloadCaptions(
       "--extractor-args",
       "youtube:player_client=default",
       ...(auth?.args ?? []),
-      ...proxyArgs,
+      ...(await getProxyArgs()),
     ];
 
     await ytDlpWrap.execPromise(args);
@@ -559,7 +567,7 @@ export async function downloadVideo(
       "--extractor-args",
       "youtube:player_client=default",
       ...(auth?.args ?? []),
-      ...proxyArgs,
+      ...(await getProxyArgs()),
     ];
 
     // Add ffmpeg location if available
