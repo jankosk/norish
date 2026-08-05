@@ -30,10 +30,17 @@ const PanelContext = createContext<{
   open: boolean;
   close: () => void;
   toggle: () => void;
-}>({ open: false, close: () => {}, toggle: () => {} });
+  overlayContainer: HTMLElement | null;
+}>({ open: false, close: () => {}, toggle: () => {}, overlayContainer: null });
 
 export function usePanel() {
   return useContext(PanelContext);
+}
+
+// Drawer sets pointer-events:none on the body, so anything portalled to the body swallows clicks.
+// Pass the overlay container for portals to render inside the drawer.
+export function usePanelOverlayContainer() {
+  return useContext(PanelContext).overlayContainer ?? undefined;
 }
 
 type PanelSectionProps = {
@@ -85,6 +92,7 @@ const PanelRoot: React.FC<PanelProps> = ({
   onOpenChange,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [overlayContainer, setOverlayContainer] = useState<HTMLElement | null>(null);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
 
@@ -156,7 +164,7 @@ const PanelRoot: React.FC<PanelProps> = ({
     <div data-panel className={className}>
       {trigger && <span className="inline-flex">{triggerElement}</span>}
 
-      <PanelContext.Provider value={{ open, close, toggle }}>
+      <PanelContext.Provider value={{ open, close, toggle, overlayContainer }}>
         {/* repositionInputs resizes the sheet and force-scrolls the focused field to
             the top of its scroll container on iOS, which throws a scrolled panel body
             out of view; Radix's RemoveScroll still locks the page behind the sheet. */}
@@ -170,6 +178,7 @@ const PanelRoot: React.FC<PanelProps> = ({
               data-variant={backdropVariant}
             />
             <Drawer.Content
+              ref={setOverlayContainer}
               aria-describedby={undefined}
               aria-label={title || "Panel"}
               className={twMerge(

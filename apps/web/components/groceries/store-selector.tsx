@@ -2,6 +2,7 @@
 
 import type { Key } from "react";
 import { useMemo } from "react";
+import { usePanelOverlayContainer } from "@/components/Panel/Panel";
 import { Label, ListBox, Select } from "@heroui/react";
 
 import type { StoreColor, StoreDto } from "@norish/shared/contracts";
@@ -38,6 +39,7 @@ export function StoreSelector({
   noStoreDescription,
   showWhenEmpty = false,
 }: StoreSelectorProps) {
+  const overlayContainer = usePanelOverlayContainer();
   const sortedStores = useMemo(
     () => [...stores].sort((a, b) => a.sortOrder - b.sortOrder),
     [stores]
@@ -69,7 +71,7 @@ export function StoreSelector({
         <Select.Value className="flex items-center" />
         <Select.Indicator />
       </Select.Trigger>
-      <Select.Popover>
+      <Select.Popover UNSTABLE_portalContainer={overlayContainer}>
         <ListBox>
           <ListBox.Item id="none" textValue={noStoreDescription ?? noStoreLabel}>
             <div className="flex items-center gap-2">
